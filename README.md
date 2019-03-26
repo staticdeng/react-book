@@ -13,7 +13,7 @@ react进阶之路：包含react技术栈全家桶，react原理或源码解析�
 
     * [PureComponent](./react基础/PureComponent/README.md)
 
-    * [react高阶组件]()
+    * [react高阶组件](./react基础/react高阶组件/README.md)
 
     * [react异步渲染组件]()
 
