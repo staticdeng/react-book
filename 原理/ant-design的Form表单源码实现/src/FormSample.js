@@ -9,12 +9,15 @@ class FormSample extends Component {
       <div>
         {
           getFeildDecorator('username', {
-            rules: [{ require: true, message: '请填写用户名' }]
-          })(<input type="text" placeholder="请输入用户名" />)
+            rules: [
+              { required: true, message: '请填写手机号' },
+              { pattern: /^1[34578]\d{9}$/, message: '手机号格式不正确' }
+            ]
+          })(<input type="text" placeholder="请输入手机号" />)
         }
         {
           getFeildDecorator('password', {
-            rules: [{ require: true, message: '请填写密码' }]
+            rules: [{ required: true, message: '请填写密码' }]
           })(<input type="password" placeholder="请输入密码" />)
         }
         <button>登录</button>
