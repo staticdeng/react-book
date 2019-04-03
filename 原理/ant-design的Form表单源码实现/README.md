@@ -56,7 +56,7 @@ export const Form = {
 ```
 这样就可以直接使用Form.create(Component)的形式调用高阶组件。
 
-然后实现在被装饰组件中使用this.props.form.getFieldDecorator，getFieldDecorator方法其实首先是在Form.create高阶组件里面实现的，是用React.cloneElement克隆传入的表单控件元素并返回一个新的React元素，然后被装饰的组件，想使用高阶组件内部的getFeildDecorator方法，只需要在高阶组件内部在新返回的组件加上getFeildDecorator属性传递，被装饰的组件用props接收即可。为了进一步达到ant-design的this.props.form.getFieldDecorator的方式，把getFeildDecorator当做form的属性，将form传递到被装饰的组件中。
+然后实现在被装饰组件中使用this.props.form.getFieldDecorator，getFieldDecorator方法其实首先是在Form.create高阶组件里面实现的，是用React.cloneElement克隆传入的表单控件元素并返回一个新的React元素，然后被装饰的组件，想使用高阶组件内部的getFieldDecorator方法，只需要在高阶组件内部在新返回的组件加上getFieldDecorator属性传递，被装饰的组件用props接收即可。为了进一步达到ant-design的this.props.form.getFieldDecorator的方式，把getFieldDecorator当做form的属性，将form传递到被装饰的组件中。
 
 **getFieldDecorator的实现：**
 
@@ -66,13 +66,17 @@ function create(FormComponent) {
     constructor(props) {
       super(props);
     }
-    getFeildDecorator = (field, option) => {
+    getFieldDecorator = (field, option) => {
       return (Comp) => {
         return(
           <div>
-            {/* React.cloneElement克隆并返回一个新的React元素 */}
+            {/* React.cloneElement克隆并返回一个新的React元素，第一个元素为克隆元素，第二个参数为克隆元素添加新的props */}
             {
-              React.cloneElement(Comp)
+              React.cloneElement(Comp, {
+                name: field, // 控件名
+                value: this.state.values[field] || '', // 控件value值
+                onChange: this.handleChange, // 将onChange集中在高阶组件里处理
+              })
             }
           </div>
         )
@@ -81,9 +85,9 @@ function create(FormComponent) {
 
     render() {
       const form = {
-        getFeildDecorator: (field, option) => {
+        getFieldDecorator: (field, option) => {
           return (Comp) => {
-            return this.getFeildDecorator(field, option)(Comp)
+            return this.getFieldDecorator(field, option)(Comp)
           }
         }
       }
@@ -102,16 +106,16 @@ import { Form } from './Form'
 
 class FormSample extends Component {
   render() {
-    const { getFeildDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form;
     return (
       <div>
         {
-          getFeildDecorator('username', {
+          getFieldDecorator('username', {
             rules: [{ require: true, message: '请填写用户名' }]
           })(<input type="text" placeholder="请输入用户名" />)
         }
         {
-          getFeildDecorator('password', {
+          getFieldDecorator('password', {
             rules: [{ require: true, message: '请填写密码' }]
           })(<input type="password" placeholder="请输入密码" />)
         }
@@ -127,6 +131,5 @@ export default WrappedFormSample
 
 <img src="./images/Form01.png" />
 
-## validateFields的实现
+validateFields，FormItem等更多的实现请看[源代码](./src/Form.js)
 
-上面我们只是简单实现了一下getFeildDecorator方法，获取表单数据和传入的表单验证配置都还没实现。

@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-
 // Form.create高阶组件
 function create(FormComponent) {
   return class extends Component {
     constructor(props) {
       super(props);
       this.options = {}; // 表单项字段配置选项
-      this.state = {}; // 存储表单项各字段值   
+      this.state = {}; // 存储表单项各字段值和验证错误信息
     }
 
+    
     handleChange = e => {
       // 获取React.cloneElement克隆元素设置的name和value属性
       const { name, value } = e.target;
@@ -16,14 +16,12 @@ function create(FormComponent) {
       this.setState({
         [name]: value
       }, () => {
-        this.validateField(name);
+        this.validate(name);
       });
-
-
     }
-
+    
     // 表单项校验
-    validateField = field => {
+    validate = field => {
       const rules = this.options[field].rules;
       const res = rules.some(rule => {
         // 必填项校验
@@ -58,11 +56,19 @@ function create(FormComponent) {
     }
 
     // 所有表单项校验(如提交的时候需要校验)
-    validate = cb => {
-      
+    validateFields = cb => {
+      const validates = Object.keys(this.options).map(field => {
+        return this.validate(field)
+      });
+      const res = validates.every(v => v === true); // 每一个表单项都验证通过，res才为true，否则为false
+      if (res) {
+        cb(null, this.state);
+      } else {
+        cb(this.state, this.state);
+      }
     }
 
-    getFeildDecorator = (field, option) => {
+    getFieldDecorator = (field, option) => {
       this.options[field] = option; // 用field区分option
       return (Comp) => {
         return (
@@ -89,10 +95,13 @@ function create(FormComponent) {
 
     render() {
       const form = {
-        getFeildDecorator: (field, option) => {
+        getFieldDecorator: (field, option) => {
           return (Comp) => {
-            return this.getFeildDecorator(field, option)(Comp)
+            return this.getFieldDecorator(field, option)(Comp)
           }
+        },
+        validateFields: (cb) => {
+          this.validateFields(cb);
         }
       }
       // 将form传递到被装饰的组件中，被装饰的组件可以通过props获取form
@@ -100,6 +109,7 @@ function create(FormComponent) {
     }
   }
 }
+
 export const Form = {
   create,
 }
