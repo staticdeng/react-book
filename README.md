@@ -27,6 +27,8 @@ react进阶之路：包含react技术栈全家桶，react原理或源码解析�
 
     * [react-redux连接react组件和redux仓库](./redux/react-redux/README.md)
 
+    * [redux中间件](./redux/react-middleware/README.md)
+
 * 性能优化
 
 * 原理
