@@ -89,6 +89,57 @@ props发生了变化，由于`<Jsx />`组件中加了子组件`<div>jsx子组件
 
 **虚拟dom其实就是描述真实dom结构的js对象**，在react中通过React.createElement生成。
 
+
+下面来写一个自己的react.js和react.dom.js：
+
+src/react.js:
+
+```js
+function createElement(type, props, ...children) {
+    props.children = children;
+    return { type, props };
+}
+
+const React = {
+    createElement,
+};
+export default React;
+```
+在jsx编译成createElement的形式时，在react内部需要有一个方法createElement来接收babel编译好的type, props, children, 这里作一个将children放到props里面的简单处理后返回这些参数的操作，这样就生成了最简单的虚拟dom。
+
+src/react.dom.js:
+
+render方法实现挂载：
+
+```js
+function render(vnode, container) {
+    // vnode虚拟节点，container挂载的容器
+    container.innerHTML = `<pre>${JSON.stringify(vnode, null, 2)}</pre>`;
+}
+
+export default { render }; 
+```
+
+src/index.js测试：
+
+```js
+import React from './react';
+import ReactDOM from './react-dom';
+
+const Jsx = (
+    <div id="jsx">
+        <span>jsx</span>
+    </div>
+)
+console.log(Jsx)
+
+ReactDOM.render(Jsx, document.getElementById('root'));
+```
+
+上面的测试代码中，为了更好地显示虚拟dom的结构，`Jsx`没有写成函数组件或者class组件，输出`Jsx`，发现虚拟dom的结构如下，达到预期效果：
+
+<img src="./images/virtual-dom03.png" />
+
 ## 虚拟dom生成真实dom
 
 参考链接：
