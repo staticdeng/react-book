@@ -85,7 +85,7 @@ console.log(<Jsx />)
 
 props发生了变化，由于`<Jsx />`组件中加了子组件`<div>jsx子组件</div>`，所以在描述`<Jsx />`的对象props中增加了children。同理，如果我们进行多层的组件嵌套，其实就是在父对象的props中增加children字段及对应的描述值，也就是js对象的递归嵌套。
 
-### React.createElement生成虚拟dom
+## React.createElement生成虚拟dom
 
 **虚拟dom其实就是描述真实dom结构的js对象**，在react中通过React.createElement生成。
 
@@ -107,24 +107,11 @@ export default React;
 ```
 在jsx编译成createElement的形式时，在react内部需要有一个方法createElement来接收babel编译好的type, props, children, 这里作一个将children放到props里面的简单处理后返回这些参数的操作，这样就生成了最简单的虚拟dom。
 
-src/react.dom.js:
-
-render方法实现挂载：
-
-```js
-function render(vnode, container) {
-    // vnode虚拟节点，container挂载的容器
-    container.innerHTML = `<pre>${JSON.stringify(vnode, null, 2)}</pre>`;
-}
-
-export default { render }; 
-```
-
 src/index.js测试：
 
 ```js
 import React from './react';
-import ReactDOM from './react-dom';
+// import ReactDOM from 'react-dom';
 
 const Jsx = (
     <div id="jsx">
@@ -133,17 +120,123 @@ const Jsx = (
 )
 console.log(Jsx)
 
-ReactDOM.render(Jsx, document.getElementById('root'));
+// ReactDOM.render(Jsx, document.getElementById('root'));
 ```
 
-上面的测试代码中，为了更好地显示虚拟dom的结构，`Jsx`没有写成函数组件或者class组件，输出`Jsx`，发现虚拟dom的结构如下，达到预期效果：
+上面的测试代码中，为了更好地显示虚拟dom的结构，`Jsx`是原生dom方式，没有写成函数组件或者class组件，输出`Jsx`，发现虚拟dom的结构如下，达到预期效果：
 
 <img src="./images/virtual-dom03.png" />
 
-## 虚拟dom生成真实dom
+## ReactDOM.render生成真实dom
+
+react-dom.js中的render方法负责将虚拟dom转化为真实dom显示在页面中
+
+来看看ReactDOM.render的使用：
+
+```js
+ReactDOM.render(Jsx, document.getElementById('root'));
+```
+
+ReactDOM.render传入的第一个参数其实就是经过转换后的虚拟dom，第二个参数是挂载的dom节点
+
+新建react-dom.js，实现render方法：
+
+```js
+function render(vnode, container) {
+    // 当vnode为字符串时，渲染结果是一段文本
+    if ( typeof vnode === 'string' ) {
+        const textNode = document.createTextNode( vnode );
+        return container.appendChild( textNode );
+    }
+
+    const dom = document.createElement( vnode.type );
+
+    // 属性处理
+    if ( vnode.props ) {
+        Object.keys( vnode.props ).forEach( key => {
+            const value = vnode.props[ key ];
+            setAttribute( dom, key, value );    // 设置属性
+        } );
+    }
+
+    vnode.props.children.forEach( child => render( child, dom ) );    // 递归渲染子节点
+
+    return container.appendChild( dom );   // 将最后的渲染结果dom添加到根节点
+}
+```
+render将虚拟dom渲染成真实dom的逻辑，也就是调用document.createElement将vnode.type创建成元素，对元素进行属性的处理，最关键是递归渲染之前处理好的props.children子节点，直到vnode的类型是文本节点，调用document.createTextNode添加为父元素的子元素，将最终的渲染结果添加到根节点上。
+
+设置属性需要考虑一些特殊情况，我们单独将其拿出来作为一个方法setAttribute
+
+```js
+function setAttribute( dom, name, value ) {
+    // 如果属性名是className，则改回class
+    if ( name === 'className' ) name = 'class';
+
+    // 如果属性名是onXXX，则是一个事件监听方法
+    if ( /on\w+/.test( name ) ) {
+        name = name.toLowerCase();
+        dom[ name ] = value || '';
+    // 如果属性名是style，则更新style对象
+    } else if ( name === 'style' ) {
+        if ( !value || typeof value === 'string' ) {
+            dom.style.cssText = value || '';
+        } else if ( value && typeof value === 'object' ) {
+            for ( let name in value ) {
+                // 可以通过style={ width: 20 }这种形式来设置样式，可以省略掉单位px
+                dom.style[ name ] = typeof value[ name ] === 'number' ? value[ name ] + 'px' : value[ name ];
+            }
+        }
+    // 普通属性则直接更新属性
+    } else {
+        if ( value && name !== 'children') {
+            dom.setAttribute( name, value );
+        } else {
+            dom.removeAttribute( name );
+        }
+    }
+}
+```
+
+这里其实还有个小问题：当多次调用render函数时，不会清除原来的内容。所以我们将其附加到ReactDOM对象上时，先清除一下挂载目标DOM的内容：
+
+```js
+const ReactDOM = {
+    render: (vnode, container) => {
+        container.innerHTML = '';
+        return render( vnode, container );
+    }
+}
+export default ReactDOM;
+```
+这样就实现了最基础的将虚拟dom转换为真实dom的功能。
+
+## 渲染和更新
+
+到这里我们已经实现了React最为基础的功能，可以用它来做一些事了。
+
+```js
+import React from './react';
+import ReactDOM from './react-dom';
+
+const Jsx = (
+    <div id="jsx" >
+        <span className="span">jsx</span>
+    </div>
+)
+
+ReactDOM.render(Jsx, document.getElementById('root'));
+```
+
+结果如下图所示，可以看到dom结构都渲染出来了，并且class等属性成功处理：
+
+<img src="./images/virtual-dom04.png" />
+
 
 参考链接：
 
 [React源码解析(一):组件的实现与挂载](https://juejin.im/post/5983dfbcf265da3e2f7f32de)
 
 [React源码分析 - 组件初次渲染](https://juejin.im/post/5a92e02d6fb9a0633d71f7f7)
+
+[从零开始实现一个React（一）：JSX和虚拟DOM](https://github.com/hujiulong/blog/issues/4)
