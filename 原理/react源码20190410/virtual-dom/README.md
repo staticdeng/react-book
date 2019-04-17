@@ -143,28 +143,43 @@ ReactDOM.render传入的第一个参数其实就是经过转换后的虚拟dom�
 
 ```js
 function render(vnode, container) {
-    // 当vnode为字符串时，渲染结果是一段文本
-    if ( typeof vnode === 'string' ) {
-        const textNode = document.createTextNode( vnode );
-        return container.appendChild( textNode );
-    }
-
-    const dom = document.createElement( vnode.type );
-
-    // 属性处理
-    if ( vnode.props ) {
-        Object.keys( vnode.props ).forEach( key => {
-            const value = vnode.props[ key ];
-            setAttribute( dom, key, value );    // 设置属性
-        } );
-    }
-
-    vnode.props.children.forEach( child => render( child, dom ) );    // 递归渲染子节点
+    // vnode为虚拟dom树
+    const dom = initVnode(vnode);
 
     return container.appendChild( dom );   // 将最后的渲染结果dom添加到根节点
 }
+
+// 判断节点类型将虚拟dom转换为真实dom
+function initVnode(vnode) {
+    // vnode为文本节点
+    if ( !vnode.type && typeof vnode === 'string' ) {
+        return document.createTextNode( vnode );
+    }
+    // vnode为原生标签
+    if ( typeof vnode.type === 'string' ) {
+        return createEle(vnode);
+    }
+}
+
+function createEle(vnode) {
+    const { type, props } = vnode;
+    const node = document.createElement( type );
+    
+    // 属性处理
+    const { key, children, ...rest } = props;
+    Object.keys( rest ).forEach( attr => {
+        const value = rest[attr];
+        setAttribute( node, attr, value );    // 设置属性
+    } );
+
+    // 递归渲染子节点
+    props.children.forEach( child => {
+        node.appendChild(initVnode(child))
+    });    
+    return node;
+}
 ```
-render将虚拟dom渲染成真实dom的逻辑，也就是调用document.createElement将vnode.type创建成元素，对元素进行属性的处理，最关键是递归渲染之前处理好的props.children子节点，直到vnode的类型是文本节点，调用document.createTextNode添加为父元素的子元素，将最终的渲染结果添加到根节点上。
+render将虚拟dom渲染成真实dom的逻辑，判断节点类型为标签调用document.createElement将vnode.type创建成元素，对元素进行属性的处理，最关键是递归遍历props.children子节点，将子节点appendChild，直到vnode的类型是文本节点，将最终的渲染结果添加到根节点上。
 
 设置属性需要考虑一些特殊情况，我们单独将其拿出来作为一个方法setAttribute
 
@@ -189,7 +204,7 @@ function setAttribute( dom, name, value ) {
         }
     // 普通属性则直接更新属性
     } else {
-        if ( value && name !== 'children') {
+        if ( value ) {
             dom.setAttribute( name, value );
         } else {
             dom.removeAttribute( name );

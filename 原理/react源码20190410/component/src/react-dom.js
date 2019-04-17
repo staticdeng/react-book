@@ -20,7 +20,7 @@ function initVnode(vnode) {
 function createEle(vnode) {
     const { type, props } = vnode;
     const node = document.createElement( type );
-    
+
     // 属性处理
     const { key, children, ...rest } = props;
     Object.keys( rest ).forEach( attr => {
