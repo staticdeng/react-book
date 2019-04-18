@@ -247,6 +247,7 @@ ReactDOM.render(Jsx, document.getElementById('root'));
 
 <img src="./images/virtual-dom04.png" />
 
+这篇文章的代码在[:point_right:这里](./src/)
 
 参考链接：
 

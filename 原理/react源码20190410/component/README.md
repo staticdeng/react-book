@@ -11,10 +11,13 @@ react中的组件分为函数组件和class组件，函数组件可以看做是c
 ```js
 import React, { Component } from 'react';
 ```
-所以在src/react.js里来初步实现这个Component类，这里只是简单初始化state和props，为后面组件的渲染做准备。
+所以初步实现这个Component类，这里只是简单初始化state和props，为后面组件的渲染做准备。
+
+继承Component定义的组件有自己的私有状态state，可以通过this.state获取到。同时也能通过this.props来获取传入的数据。  
+所以在构造函数中，我们这样初始化state和props
 
 ```js
-export class Component {
+class Component {
     constructor( props = {} ) {
         this.props = props;
         this.state = {};
@@ -71,14 +74,17 @@ console.log(<JsxClass/>)
 
 我们不需要对createElement做修改，只需要知道如果渲染的是组件，type的值将是一个函数，所以需要判断type来渲染组件的虚拟dom。
 
-## render
+## 组件render
 
-上一篇文章中实现的render方法只支持渲染原生DOM元素，我们需要修改ReactDOM.render方法，让其支持渲染组件的虚拟dom。
+上一篇文章中实现的render方法只支持渲染原生DOM元素，我们需要修改ReactDOM.render方法，让其支持渲染组件的虚拟dom成真实dom。
 
 加上虚拟dom树vnode的type为function的判断：
 
+## 生命周期
 
+## setState实现
 
+这篇文章的代码在[:point_right:这里](./src/)
 
 参考链接：
 
