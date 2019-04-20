@@ -1,32 +1,29 @@
-import React, { Component } from './react';
+import React from './react';
 import ReactDOM from './react-dom';
+
+function JsxFunc(props){
+    return (
+        <div>
+            <span>{props.name}</span>
+        </div>
+    )
+}
+
+class JsxClass extends React.Component {
+    render() {
+        return (
+            <div>
+                <span>{this.props.name}</span>
+            </div>
+        )
+    }
+}
 
 const Jsx = (
     <div id="jsx">
-        <span>jsx</span>
+        <JsxFunc name="this is JsxFunc" />
+        <JsxClass name="this is JsxClass"/>
     </div>
 )
-console.log(Jsx)
-
-// function JsxFunc(){
-//     return (
-//         <div id="jsx">
-//             <span>jsx</span>
-//         </div>
-//     )
-// }
-
-// class JsxClass extends Component {
-//     render() {
-//         return (
-//             <div id="jsx">
-//                 <span>jsx</span>
-//             </div>
-//         )
-//     }
-// }
-
-// console.log(<JsxFunc/>)
-// console.log(<JsxClass/>)
 
 ReactDOM.render(Jsx, document.getElementById('root'));
